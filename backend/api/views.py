@@ -1,3 +1,4 @@
+from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,7 +7,7 @@ from django.contrib.auth import get_user_model
 
 
 from food.models import CookUser
-from api.serializers import UserSerializer, UserCreateSerializer
+from api.serializers import UserSerializer, UserCreateSerializer, AvatarSerializer
 from api.permissions import DeleteAndUdateOnlyAuthor
 
 
@@ -18,7 +19,7 @@ class UserCreateViewSet(viewsets.ModelViewSet):
     serializer_class = UserCreateSerializer
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(DjoserUserViewSet):
     queryset = CookUser.objects.all()
     serializer_class = UserSerializer
 
@@ -36,12 +37,12 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors)
 
-    def get_serializer_class(self):
-        """Получить класс сериализатора."""
-        if self.action in ("list", "retrieve", "me",):
-            return UserSerializer
+    # def get_serializer_class(self):
+    #     """Получить класс сериализатора."""
+    #     if self.action in ("list", "retrieve", "me",):
+    #         return UserSerializer
 
-        return super().get_serializer_class()
+    #     return super().get_serializer_class()
 
     @action(
         methods=("GET",),
@@ -54,6 +55,13 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(request.user, context={"request": request})
 
         return Response(serializer.data)
+
+    @action(
+           methods=["put"],
+           detail=False,
+           url_path="me/avatar",
+           permission_classes=[IsAuthenticated],
+       )
 
     def update_avatar(self, request):
         user = request.user

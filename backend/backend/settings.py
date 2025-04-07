@@ -157,7 +157,7 @@ DJOSER = {
     "PERMISSIONS": {
         "user_list": ("rest_framework.permissions.AllowAny",),
         "user": ("rest_framework.permissions.AllowAny",),
-        "current_user": ("api.permissions.AllowAnyExceptMe",),
+        "current_user": ("rest_framework.permissions.IsAuthenticated",),
 
     },
 
