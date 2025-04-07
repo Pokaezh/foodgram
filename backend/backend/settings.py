@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / "subdir".
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_extensions",
     "rest_framework",
     "corsheaders",
     "rest_framework.authtoken",
@@ -79,8 +81,11 @@ DATABASES = {
     }
 }
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+STATIC_ROOT = BASE_DIR / "static"
+STATIC_URL = os.getenv("STATIC_URL", "/static/")
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = "food.CookUser"
 
@@ -129,7 +134,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny"],
+        "rest_framework.permissions.IsAuthenticated"],
 
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication"],
@@ -147,10 +152,13 @@ DJOSER = {
     "SERIALIZERS": {
         "user_create": "api.serializers.UserCreateSerializer",
         "user": "api.serializers.UserSerializer",
+        "current_user": "api.serializers.UserSerializer",
     },
     "PERMISSIONS": {
         "user_list": ("rest_framework.permissions.AllowAny",),
-        "user": ("rest_framework.permissions.IsAuthenticatedOrReadOnly",),
+        "user": ("rest_framework.permissions.AllowAny",),
+        "current_user": ("api.permissions.AllowAnyExceptMe",),
+
     },
 
 }

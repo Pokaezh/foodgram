@@ -1,8 +1,21 @@
+import base64  
+from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 
-from food.models import CookUser
+from food.models import CookUser, Follow
+
+# Модуль с функциями кодирования и декодирования base64
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super().to_internal_value(data)
 
 
 class UserCreateSerializer(BaseUserCreateSerializer):
@@ -11,34 +24,45 @@ class UserCreateSerializer(BaseUserCreateSerializer):
     
     class Meta(BaseUserCreateSerializer.Meta):
         model = CookUser
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "password")
-    # def validate_first_name(self, value):
-    #     if not value:
-    #         raise serializers.ValidationError("Это поле обязательно.")
-    #     return value
+        fields = BaseUserSerializer.Meta.fields
 
 
 class UserSerializer(BaseUserSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+    avatar = Base64ImageField (required=False, allow_null=True)
+
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+    )
 
     class Meta(BaseUserSerializer.Meta):
         model = CookUser
-        fields = (
-              "email",
-              "id",
-              "username",
-              "first_name",
-              "last_name",)
+        fields = BaseUserSerializer.Meta.fields + (
+            "is_subscribed",
+            "avatar",
+        )
 
-    # def get_is_subscribed(self, obj):
-    #     # Логика для определения подписки (например, проверка на наличие подписки)
-    #     return False  # надо что-то придумать
+   
+    def get_is_subscribed(self, obj):
+        # проверка подписки
+        request = self.context.get('request')
+        if request.user.is_authenticated:
+            return Follow.objects.filter(
+                user=request.user, following=obj).exists()
+        return False
+    
+    def get_image_url(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
-    # is_subscribed = serializers.SerializerMethodField()
-    # avatar = serializers.ImageField(source='profile.avatar')
-            
+class AvatarSerializer(serializers.ModelSerializer):
+    """Сериализатор для обновления аватара."""
+
+    avatar = Base64ImageField()
+
+    class Meta:
+
+        model = CookUser
+        fields = ("avatar",)

@@ -28,20 +28,42 @@ class CookUser(AbstractUser):
         'Аватар',
         upload_to='avatars/',
         null=True,
-        blank=True
-        # default = "foodgram/frontend/src/images/userpic-icon.jpg"
+        blank=True,
     )
-    
+
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
         ordering = ["username"]
 
     def __str__(self):
-        return self.username
+        return self.username[:MAX_LENGTH_FIELD_STR]
 
 
 User = get_user_model()
+
+class Follow(models.Model):
+    '''Модель для подписок.'''
+
+    user = models.ForeignKey(
+        User,
+        related_name='following',
+        on_delete=models.CASCADE,
+        blank=True, null=True)
+    following = models.ForeignKey(
+        User,
+        related_name='followers',
+        on_delete=models.CASCADE,
+        blank=True, null=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'following'], name='unique_follow'),
+        ]
+
+    def __str__(self):
+        return f'{self.user.username} follows {self.following.username}'
 
 
 class Ingredient(models.Model):
