@@ -19,4 +19,4 @@ class CookUserAdmin(BaseUserAdmin):
 
 @admin.register(Ingredient)
 class GenreAdmin(admin.ModelAdmin):
-    list_display = ("title", "unit")
+    list_display = ("name", "measurement_unit")

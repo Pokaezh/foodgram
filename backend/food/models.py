@@ -6,12 +6,13 @@ from django.db import models
 from food.constants import MAX_LENGTH_FIELD_STR, MAX_LENGTH_TITLE
 
 
-UNIT_CHOICES = [
-    ("кг", "кг"),
-    ("г", "г"),
-    ("л", "л"),
-    ("мл", "мл"),
-]
+# UNIT_CHOICES = [
+#     ("кг", "кг"),
+#     ("г", "г"),
+#     ("л", "л"),
+#     ("мл", "мл"),
+#     ("шт", "шт"),
+# ]
 
 
 class CookUser(AbstractUser):
@@ -67,24 +68,29 @@ class Follow(models.Model):
 
 
 class Ingredient(models.Model):
-    title = models.CharField(
+    name = models.CharField(
         'Название ингридиента',
         max_length=MAX_LENGTH_TITLE)
-    unit = models.CharField(
+    measurement_unit = models.CharField(
         'Единица измерения',
-        max_length=MAX_LENGTH_TITLE,
-        choices=UNIT_CHOICES)
-
+        max_length=MAX_LENGTH_TITLE,)
+    
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=("name", "measurement_unit",),
+                name="unique_ingredient_unit",
+            ),
+        ]
 
     def __str__(self):
         return self.title[:MAX_LENGTH_FIELD_STR]
 
 
 class Tag (models.Model):
-    title = models.CharField(
+    name = models.CharField(
         'Название тега',
         max_length=MAX_LENGTH_TITLE)
     slug = models.SlugField('Слаг', unique=True)

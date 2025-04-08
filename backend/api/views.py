@@ -6,10 +6,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from django.contrib.auth import get_user_model
+from django_filters.rest_framework import DjangoFilterBackend
 
 
-from food.models import CookUser
-from api.serializers import UserSerializer, UserCreateSerializer, AvatarSerializer
+from food.models import CookUser, Tag, Ingredient
+from api.serializers import UserSerializer, UserCreateSerializer, AvatarSerializer, TagSerializer, IngredientSerializer
 from api.permissions import DeleteAndUdateOnlyAuthor
 
 
@@ -65,3 +66,17 @@ class UserViewSet(DjoserUserViewSet):
 
             return Response({"detail": "Аватар не найден."}, status=status.HTTP_404_NOT_FOUND) 
 
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    pagination_class = None
+
+
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    filter_backends = (DjangoFilterBackend,)
+    pagination_class = None

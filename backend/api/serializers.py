@@ -4,7 +4,7 @@ from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 
-from food.models import CookUser, Follow
+from food.models import CookUser, Follow, Tag, Ingredient
 
 # Модуль с функциями кодирования и декодирования base64
 
@@ -66,3 +66,19 @@ class AvatarSerializer(serializers.ModelSerializer):
 
         model = CookUser
         fields = ("avatar",)
+
+class TagSerializer(serializers.ModelSerializer):
+    """Сериализатор тэгов."""
+    
+    class Meta:
+
+        model = Tag
+        fields = "__all__"
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор ингредиентов."""
+    
+    class Meta:
+
+        model = Ingredient
+        fields = "__all__"

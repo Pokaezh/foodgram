@@ -8,11 +8,13 @@ from rest_framework import routers
 from rest_framework.routers import DefaultRouter
 
 
-from api.views import UserViewSet,  UserCreateViewSet
+from api.views import UserViewSet,  UserCreateViewSet, TagViewSet, IngredientViewSet
 
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet, basename="users")
+router.register(r"users", UserViewSet, basename="users")
+router.register("tags", TagViewSet, basename="tags")
+router.register("ingredients", IngredientViewSet, basename="ingredients")
 
 
 urlpatterns = [
