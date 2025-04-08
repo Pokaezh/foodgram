@@ -1,3 +1,5 @@
+from rest_framework import status
+from rest_framework.response import Response 
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -23,26 +25,6 @@ class UserViewSet(DjoserUserViewSet):
     queryset = CookUser.objects.all()
     serializer_class = UserSerializer
 
-    # def get_permissions(self):
-    #         # Если метод - POST, разрешаем доступ всем
-    #     if self.request.method == 'POST':
-    #         self.permission_classes = [IsAuthenticatedOrReadOnly]
-    #     return super().get_permissions()
-
-    def create(self, request):
-        # Логика для создания пользователя
-        serializer = UserCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors)
-
-    # def get_serializer_class(self):
-    #     """Получить класс сериализатора."""
-    #     if self.action in ("list", "retrieve", "me",):
-    #         return UserSerializer
-
-    #     return super().get_serializer_class()
 
     @action(
         methods=("GET",),
@@ -57,28 +39,29 @@ class UserViewSet(DjoserUserViewSet):
         return Response(serializer.data)
 
     @action(
-           methods=["put"],
+           methods=["put", "delete"],
            detail=False,
            url_path="me/avatar",
            permission_classes=[IsAuthenticated],
        )
 
-    def update_avatar(self, request):
+    def avatar(self, request):
+        """Добавление и удаление аватара"""
         user = request.user
-        serializer = AvatarSerializer(user, data=request.data, partial=True)
+        if request.method == "PUT":
+            if 'avatar' not in request.data:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            serializer = AvatarSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors)
+        elif request.method == "DELETE":
+            if user.avatar:
+                user.avatar.delete()
+                user.avatar = None
+                user.save() 
+                return Response(status=status.HTTP_204_NO_CONTENT)
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors)
-    
-    # def get_permissions(self):
-    #     if self.action == "me":
-    #         self.permission_classes = [IsAuthenticated]
-    #     return super().get_permissions()
-
-    # def retrieve(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(instance)
-    #     return Response(serializer.data)
+            return Response({"detail": "Аватар не найден."}, status=status.HTTP_404_NOT_FOUND) 
 
