@@ -86,7 +86,7 @@ class Ingredient(models.Model):
         ]
 
     def __str__(self):
-        return self.title[:MAX_LENGTH_FIELD_STR]
+        return self.name[:MAX_LENGTH_FIELD_STR]
 
 
 class Tag (models.Model):
@@ -100,14 +100,14 @@ class Tag (models.Model):
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return self.title
+        return self.name
 
 
 class Recipe(models.Model):
     '''Модель рецепта.'''
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(
+    name = models.CharField(
         'Название рецепта',
         max_length=MAX_LENGTH_TITLE)
     image = models.ImageField(
@@ -122,17 +122,20 @@ class Recipe(models.Model):
         auto_now_add=True
     )
 
-    ingredients = models.ManyToManyField(Ingredient, "Ингридиенты")
+    ingredients = models.ManyToManyField(
+        Ingredient,
+        through='RecipeIngredient',
+        related_name='recipes')
 
-    tags = models.ManyToManyField(Tag, "Тэги")
-
-    cook_time = models.IntegerField()
+    tags = models.ManyToManyField(Tag, related_name='recipes')
+    
+    cooking_time = models.IntegerField()
 
     def clean(self):
-        if self.cook_time < 0:
+        if self.cooking_time < 0:
             raise ValidationError(
                 "Время приготовления не может быть меньше 1 минуты")
-        elif self.cook_time > 1440:
+        elif self.cooking_time > 1440:
             raise ValidationError(
                 "Время приготовления не может быть больше 24 часов.")
 
@@ -144,3 +147,11 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.title[:MAX_LENGTH_FIELD_STR]
+
+class RecipeIngredient(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    amount = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ('recipe', 'ingredient')

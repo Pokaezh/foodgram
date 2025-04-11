@@ -4,7 +4,7 @@ from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 
-from food.models import CookUser, Follow, Tag, Ingredient
+from food.models import CookUser, Follow, Tag, Ingredient, Recipe, RecipeIngredient
 
 # Модуль с функциями кодирования и декодирования base64
 
@@ -82,3 +82,62 @@ class IngredientSerializer(serializers.ModelSerializer):
 
         model = Ingredient
         fields = "__all__"
+
+class IngredientAmountSerializer(serializers.ModelSerializer):
+    """Сериализатор для ингредиентов с указанием количества."""
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    class Meta:
+        model = RecipeIngredient
+        fields = ['id', 'amount']
+
+class RecipeCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор создания рецептов."""
+
+    author = serializers.SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+    )
+    
+    ingredients = IngredientAmountSerializer (many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(), 
+        many=True)
+    image = Base64ImageField (required=False, allow_null=True)
+
+
+    class Meta:
+
+        model = Recipe
+        fields = ["ingredients", "author", "tags", "image", "name", "text", "cooking_time"]
+
+    def create(self, validated_data):
+        # Создание рецепта
+        ingredients_data = validated_data.pop('ingredients')
+        tags_data = validated_data.pop('tags')
+        validated_data['author'] = self.context['request'].user
+
+        recipe = Recipe.objects.create(**validated_data)
+
+        # Создаем связи между рецептом и ингредиентами
+        for ingredient_data in ingredients_data:
+            ingredient_id = ingredient_data['id']
+            amount = ingredient_data['amount']
+            RecipeIngredient.objects.create(
+                recipe=recipe, 
+                ingredient_id=ingredient_id, 
+                amount=amount)
+
+        # Устанавливаем связи между рецептом и тегами
+        recipe.tags.set(tags_data)  # Устанавливаем теги для рецепта
+
+        return recipe
+
+class RecipeDetailSerializer(serializers.ModelSerializer):
+    """Сериализатор для отображения деталей рецепта."""
+    
+    ingredients = IngredientAmountSerializer(many=True)
+    tags = TagSerializer(many=True)
+
+    class Meta:
+        model = Recipe
+        fields = ["id", "author", "tags", "ingredients", "name", "image", "text", "cooking_time"]
