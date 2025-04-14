@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework import filters
 from rest_framework.response import Response 
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import viewsets
@@ -78,7 +79,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
     pagination_class = None
 
 class RecipeViewSet(viewsets.ModelViewSet):

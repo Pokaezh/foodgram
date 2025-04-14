@@ -73,7 +73,7 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Tag
-        fields = "__all__"
+        fields = ("id", "name", "slug")
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериализатор ингредиентов."""
@@ -119,16 +119,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
 
         # Создаем связи между рецептом и ингредиентами
-        for ingredient_data in ingredients_data:
-            ingredient_id = ingredient_data['id']
-            amount = ingredient_data['amount']
-            RecipeIngredient.objects.create(
-                recipe=recipe, 
-                ingredient_id=ingredient_id, 
-                amount=amount)
+        recipe_ingredients = [
+            RecipeIngredient(recipe=recipe, ingredient_id=ingredient['id'], amount=ingredient['amount'])
+            for ingredient in ingredients_data
+        ]
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
         # Устанавливаем связи между рецептом и тегами
-        recipe.tags.set(tags_data)  # Устанавливаем теги для рецепта
+        recipe.tags.set(tags_data)
 
         return recipe
 
