@@ -1,7 +1,7 @@
-from rest_framework import status
-from rest_framework import filters
+from rest_framework import filters, status, viewsets
 from rest_framework.response import Response 
 from djoser.views import UserViewSet as DjoserUserViewSet
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,6 +13,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from food.models import CookUser, Tag, Ingredient, Recipe
 from api.serializers import UserSerializer, UserCreateSerializer, AvatarSerializer, TagSerializer, IngredientSerializer, RecipeCreateSerializer
 from api.permissions import DeleteAndUdateOnlyAuthor
+from api.filters import NameFilter
 
 
 
@@ -76,12 +77,15 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет для ингредиентов."""
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('^name',)
+    permission_classes = [AllowAny]
     pagination_class = None
+    filter_backends = (NameFilter, DjangoFilterBackend)
+    search_fields = ('^name',)
+
 
 class RecipeViewSet(viewsets.ModelViewSet):
 
