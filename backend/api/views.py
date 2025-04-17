@@ -11,7 +11,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 
 from food.models import CookUser, Tag, Ingredient, Recipe
-from api.serializers import UserSerializer, UserCreateSerializer, AvatarSerializer, TagSerializer, IngredientSerializer, RecipeCreateSerializer
+from api.serializers import (
+    UserSerializer, 
+    UserCreateSerializer, 
+    AvatarSerializer, 
+    TagSerializer, 
+    IngredientSerializer, 
+    RecipeCreateSerializer, 
+    RecipeDetailSerializer
+    )
 from api.permissions import DeleteAndUdateOnlyAuthor
 from api.filters import NameFilter
 
@@ -88,17 +96,20 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-
     queryset = Recipe.objects.all()
-    serializer_class = RecipeCreateSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH']:
+            return RecipeCreateSerializer
+        return RecipeDetailSerializer
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(
+            data=request.data, 
+            context={'request': request}) 
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        
-        # Получаем созданный рецепт и возвращаем его в нужном формате
-        recipe = serializer.instance
-        detail_serializer = RecipeDetailSerializer(recipe)
-        
+        recipe = serializer.save(author=self.request.user)
+
+        detail_serializer = RecipeDetailSerializer(
+            recipe, context={'request': request})
         return Response(detail_serializer.data, status=status.HTTP_201_CREATED)

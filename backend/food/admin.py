@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from food.models import CookUser, Ingredient, Tag
+from food.models import CookUser, Ingredient, Tag, Recipe
 
 User = get_user_model()
 
@@ -24,3 +24,26 @@ class IngredientAdmin(admin.ModelAdmin):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ("name", "slug")
+
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = (
+        "name", 
+        "author", 
+        "image", 
+        "text", 
+        "pub_date", 
+        "get_ingredients", 
+        "get_tags", 
+        "cooking_time")
+
+    def get_ingredients(self, obj):
+        return ", ".join([ingredient.name for ingredient in obj.ingredients.all()])
+    get_ingredients.short_description = 'Ingredients'
+
+    def get_tags(self, obj):
+        return ", ".join([tag.name for tag in obj.tags.all()])
+    get_tags.short_description = 'Tags'
+
+
+       

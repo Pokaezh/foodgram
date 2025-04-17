@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.core.validators import MinValueValidator
 
 from food.constants import MAX_LENGTH_FIELD_STR, MAX_LENGTH_TITLE
 
@@ -146,12 +147,31 @@ class Recipe(models.Model):
         ordering = ["-pub_date"]
 
     def __str__(self):
-        return self.title[:MAX_LENGTH_FIELD_STR]
+        return self.name[:MAX_LENGTH_FIELD_STR]
 
 class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    amount = models.PositiveIntegerField()
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='recipeingredients',
+        verbose_name='Рецепт'
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='recipeingredients',
+        verbose_name='Ингредиент'
+    )
+    amount = models.PositiveIntegerField(
+        'Количество',
+        validators=[
+            MinValueValidator(1, 'Количество ингредиентов не может быть меньше 1')
+        ]
+    )
 
     class Meta:
         unique_together = ('recipe', 'ingredient')
+        verbose_name = 'Ингредиент в рецепте'
+        verbose_name_plural = 'Ингредиенты в рецепте'
+
+
