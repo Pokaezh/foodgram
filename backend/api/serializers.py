@@ -1,3 +1,4 @@
+
 import base64  
 from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
@@ -87,10 +88,13 @@ class IngredientSerializer(serializers.ModelSerializer):
 class IngredientAmountSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='ingredient.id')
     amount = serializers.IntegerField()
+    name = serializers.CharField(source='ingredient.name', read_only=True)
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit', read_only=True)
 
     class Meta:
         model = RecipeIngredient
-        fields = ['id','recipe','ingredient',  'amount']
+        fields = ['id',  'amount', 'name', 'measurement_unit']
 
     def to_internal_value(self, data):
         ingredient_id = data.get('id')
@@ -102,6 +106,8 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'id': 'Ingredient not found.'})
 
         return {'ingredient': ingredient, 'amount': amount}
+
+
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания рецептов."""
@@ -130,6 +136,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
         return recipe
 
+   
 class RecipeDetailSerializer(serializers.ModelSerializer):
     """Сериализатор для деталей рецепта."""
     
@@ -155,4 +162,3 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         # if request and request.user.is_authenticated:
         #     return obj in request.user.shopping_cart.all()  
         return False
-

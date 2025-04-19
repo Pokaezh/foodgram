@@ -94,7 +94,6 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (NameFilter, DjangoFilterBackend)
     search_fields = ('^name',)
 
-
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
 
@@ -113,3 +112,4 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail_serializer = RecipeDetailSerializer(
             recipe, context={'request': request})
         return Response(detail_serializer.data, status=status.HTTP_201_CREATED)
+
