@@ -86,6 +86,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'measurement_unit', 'amount']
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
+    """Сериализатор для связи рецептов и количества ингредиентов."""
     id = serializers.IntegerField(source='ingredient.id')
     amount = serializers.IntegerField()
     name = serializers.CharField(source='ingredient.name', read_only=True)
@@ -110,7 +111,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания рецептов."""
+    """Сериализатор для создания и обновления рецептов."""
     
     author = serializers.ReadOnlyField(source='author.id')
     ingredients = IngredientAmountSerializer(many=True)
@@ -135,6 +136,30 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             RecipeIngredient.objects.create(recipe=recipe, ingredient=ingredient, amount=amount)
 
         return recipe
+    
+    def update(self, instance, validated_data):
+        ingredients_data = validated_data.pop('ingredients', None)
+        tags_data = validated_data.pop('tags', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if tags_data is not None:
+            instance.tags.set(tags_data)
+
+        if ingredients_data is not None:
+            for ingredient_data in ingredients_data:
+                ingredient = ingredient_data.pop('ingredient')
+                amount = ingredient_data['amount']
+                
+                recipe_ingredient, created = RecipeIngredient.objects.update_or_create(
+                    recipe=instance,
+                    ingredient=ingredient,
+                    defaults={'amount': amount}
+                )
+
+        instance.save()
+        return instance
 
    
 class RecipeDetailSerializer(serializers.ModelSerializer):

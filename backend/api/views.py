@@ -98,7 +98,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
 
     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PUT', 'PATCH']:
+        if self.request.method in ['POST', 'PUT', 'PATCH', ]:
             return RecipeCreateSerializer
         return RecipeDetailSerializer
 
@@ -112,4 +112,28 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail_serializer = RecipeDetailSerializer(
             recipe, context={'request': request})
         return Response(detail_serializer.data, status=status.HTTP_201_CREATED)
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance,
+            data=request.data,
+            partial=partial,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        recipe = serializer.save()
+        
+        detail_serializer = RecipeDetailSerializer(
+            recipe, context={'request': request}
+        )
+        return Response(detail_serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
 
