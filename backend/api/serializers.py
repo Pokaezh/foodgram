@@ -6,6 +6,13 @@ from djoser.serializers import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 
 from food.models import CookUser, Follow, Tag, Ingredient, Recipe, RecipeIngredient
+from api.validators import (
+    validate_ingredients, 
+    validate_tags,
+    validate_IngredientAmount,
+    validate_image,
+    validate_cooking_time,
+    validate_recipe)
 
 # Модуль с функциями кодирования и декодирования base64
 
@@ -122,6 +129,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ['ingredients', 'tags', 'image', 'name', 'text', 'cooking_time', 'author']
+    
+    def validate(self, attrs):
+        validate_recipe(attrs)
+        return attrs
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
@@ -170,11 +181,17 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     tags = TagSerializer(many=True)
+    image = Base64ImageField (required=False, allow_null=True)
 
     class Meta:
         model = Recipe
         fields = ['id', 'tags', 'author', 'ingredients', 'is_favorited', 'is_in_shopping_cart', 
                   'name', 'image', 'text', 'cooking_time']
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['image'] = representation['image'] or ''
+        return representation
 
     def get_is_favorited(self, obj):
         # request = self.context.get('request')

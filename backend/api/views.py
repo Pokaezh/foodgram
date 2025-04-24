@@ -21,7 +21,8 @@ from api.serializers import (
     RecipeDetailSerializer
     )
 from api.permissions import DeleteAndUdateOnlyAuthor
-from api.filters import NameFilter
+from api.filters import NameFilter, RecipeFilter
+from api.permissions import IsOwner, DeleteAndUdateOnlyAuthor
 
 
 
@@ -93,26 +94,54 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     filter_backends = (NameFilter, DjangoFilterBackend)
     search_fields = ('^name',)
-
+    
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
+    serializer_class = RecipeDetailSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
-        if self.request.method in ['POST', 'PUT', 'PATCH', ]:
+        if self.request.method in ['POST', 'PUT', 'PATCH']:
             return RecipeCreateSerializer
         return RecipeDetailSerializer
+    
+    def get_permissions(self):
+        if self.request.method in ['POST']:
+            return [IsAuthenticated()]
+        elif self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            return [DeleteAndUdateOnlyAuthor()]  
+        return super().get_permissions()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "count": queryset.count(),
+            "next": self.get_next_link(),
+            "previous": self.get_previous_link(),
+            "results": serializer.data
+        })
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(
-            data=request.data, 
-            context={'request': request}) 
+            data=request.data,
+            context={'request': request}
+        )
         serializer.is_valid(raise_exception=True)
         recipe = serializer.save(author=self.request.user)
 
         detail_serializer = RecipeDetailSerializer(
-            recipe, context={'request': request})
+            recipe, context={'request': request}
+        )
         return Response(detail_serializer.data, status=status.HTTP_201_CREATED)
-    
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -124,7 +153,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         recipe = serializer.save()
-        
+
         detail_serializer = RecipeDetailSerializer(
             recipe, context={'request': request}
         )
@@ -134,6 +163,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-    
 
+    # def get_next_link(self):
+    #     if self.paginator and self.paginator.get_next_link():
+    #         return self.paginator.get_next_link()
+    #     return None
+
+    # def get_previous_link(self):
+    #     if self.paginator and self.paginator.get_previous_link():
+    #         return self.paginator.get_previous_link()
+    #     return None
