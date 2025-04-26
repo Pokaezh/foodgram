@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.core.validators import MinValueValidator
 
+
 from food.constants import MAX_LENGTH_FIELD_STR, MAX_LENGTH_TITLE
 
 
@@ -131,6 +132,14 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(Tag, related_name='recipes')
     
     cooking_time = models.IntegerField()
+
+    short_link = models.CharField(
+        "Хеш для короткой ссылки",
+        max_length=6,
+        unique=True,
+        null=True,
+        blank=True,
+    )
 
     def clean(self):
         if self.cooking_time < 0:

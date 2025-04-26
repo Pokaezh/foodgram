@@ -9,7 +9,7 @@ from food.models import CookUser, Follow, Tag, Ingredient, Recipe, RecipeIngredi
 from api.validators import (
     validate_ingredients, 
     validate_tags,
-    validate_IngredientAmount,
+   # validate_IngredientAmount,
     validate_image,
     validate_cooking_time,
     validate_recipe)

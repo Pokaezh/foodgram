@@ -1,9 +1,11 @@
 from rest_framework import filters, status, viewsets
 from rest_framework.response import Response 
+from rest_framework.pagination import LimitOffsetPagination
 from djoser.views import UserViewSet as DjoserUserViewSet
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404, redirect
 from rest_framework import viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from django.contrib.auth import get_user_model
@@ -100,6 +102,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeDetailSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+    pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PUT', 'PATCH']:
@@ -163,6 +166,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+        
+    @action(detail=True, methods=['get'], url_path='get-link')
+    def get_link(self, request, pk=None):
+        """Возвращает короткую ссылку на рецепт."""
+        recipe = get_object_or_404(Recipe, id=pk)
+
+        if not recipe.short_link:
+            short_link = str(recipe.id)  
+            recipe.short_link = short_link
+            recipe.save(update_fields=["short_link"])
+
+        scheme = request.scheme
+        host = request.get_host()
+
+        return Response(
+            {"short-link": f"{scheme}://{host}/r/{recipe.short_link}"},
+            status=status.HTTP_200_OK,
+        )
+
 
     # def get_next_link(self):
     #     if self.paginator and self.paginator.get_next_link():
@@ -173,3 +195,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #     if self.paginator and self.paginator.get_previous_link():
     #         return self.paginator.get_previous_link()
     #     return None
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def recipe_short_link(request, hash):
+    """Возвращает рецепт по короткой ссылке."""
+    recipe = get_object_or_404(Recipe, short_link=hash)
+    return redirect(f"/recipes/{recipe.id}/")

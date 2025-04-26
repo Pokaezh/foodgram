@@ -8,7 +8,7 @@ from rest_framework import routers
 from rest_framework.routers import DefaultRouter
 
 
-from api.views import UserViewSet,  UserCreateViewSet, TagViewSet, IngredientViewSet, RecipeViewSet
+from api.views import UserViewSet,  UserCreateViewSet, TagViewSet, IngredientViewSet, RecipeViewSet, recipe_short_link
 
 
 router = DefaultRouter()
@@ -23,6 +23,8 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('', include(router.urls)),
     path('api/auth/', include('djoser.urls.authtoken')),
+    path("r/<str:hash>/", recipe_short_link, name="recipe_short_link"),
+
 
 ]
 
