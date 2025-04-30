@@ -1,4 +1,4 @@
-from rest_framework import filters, status, viewsets
+from rest_framework import filters, status, viewsets, permissions
 from rest_framework.response import Response 
 from rest_framework.pagination import LimitOffsetPagination
 from djoser.views import UserViewSet as DjoserUserViewSet
@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 
 
-from food.models import CookUser, Tag, Ingredient, Recipe
+from food.models import CookUser, Tag, Ingredient, Recipe, Favorite
 from api.serializers import (
     UserSerializer, 
     UserCreateSerializer, 
@@ -20,7 +20,8 @@ from api.serializers import (
     TagSerializer, 
     IngredientSerializer, 
     RecipeCreateSerializer, 
-    RecipeDetailSerializer
+    RecipeDetailSerializer,
+    FavoriteSerializer
     )
 from api.permissions import DeleteAndUdateOnlyAuthor
 from api.filters import NameFilter, RecipeFilter
@@ -184,6 +185,28 @@ class RecipeViewSet(viewsets.ModelViewSet):
             {"short-link": f"{scheme}://{host}/r/{recipe.short_link}"},
             status=status.HTTP_200_OK,
         )
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def favorite(self, request, pk=None):
+        recipe = self.get_object()
+        favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+
+        favorite_serializer = FavoriteSerializer(
+            favorite, context={'request': request}
+        )
+        if created:
+            return Response(favorite_serializer.data, status=status.HTTP_201_CREATED)
+        return Response({'status': 'already in favorites'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    def unfavorite(self, request, pk=None):
+        recipe = self.get_object()
+        try:
+            favorite = Favorite.objects.get(user=request.user, recipe=recipe)
+            favorite.delete()
+            return Response({'status': 'removed from favorites'}, status=status.HTTP_204_NO_CONTENT)
+        except Favorite.DoesNotExist:
+            return Response({'status': 'not in favorites'}, status=status.HTTP_400_BAD_REQUEST)
 
 
     # def get_next_link(self):
@@ -202,3 +225,36 @@ def recipe_short_link(request, hash):
     """Возвращает рецепт по короткой ссылке."""
     recipe = get_object_or_404(Recipe, short_link=hash)
     return redirect(f"/recipes/{recipe.id}/")
+
+class FavoritViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, recipe_id=None):
+        """Добавление рецепта в избранное."""
+        try:
+            recipe = Recipe.objects.get(id=recipe_id)
+        except Recipe.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+
+        if created:
+            serializer = FavoriteSerializer(favorite)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"detail": "Рецепт уже добавлен в избранное."}, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request):
+        """Просмотр списка избранных рецептов."""
+        favorites = Favorite.objects.filter(user=request.user)
+        serializer = FavoriteSerializer(favorites, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def destroy(self, request, recipe_id=None):
+        """Удаление рецепта из избранного."""
+        try:
+            favorite = Favorite.objects.get(user=request.user, recipe_id=recipe_id)
+            favorite.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Favorite.DoesNotExist:
+            return Response({"detail": "Рецепт не найден в избранном."}, status=status.HTTP_404_NOT_FOUND)

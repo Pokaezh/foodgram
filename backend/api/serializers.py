@@ -5,7 +5,7 @@ from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 
-from food.models import CookUser, Follow, Tag, Ingredient, Recipe, RecipeIngredient
+from food.models import CookUser, Follow, Tag, Ingredient, Recipe, RecipeIngredient, Favorite
 from api.validators import (
     validate_ingredients, 
     validate_tags,
@@ -188,19 +188,31 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'tags', 'author', 'ingredients', 'is_favorited', 'is_in_shopping_cart', 
                   'name', 'image', 'text', 'cooking_time']
     
+    
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        user = request.user if request.user.is_authenticated else None
+        return Favorite.objects.filter(user=user, recipe=obj).exists() if user else False
+
+    
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['image'] = representation['image'] or ''
         return representation
-
-    def get_is_favorited(self, obj):
-        # request = self.context.get('request')
-        # if request and request.user.is_authenticated:
-        #     return obj in request.user.favorites.all()  
-        return False
 
     def get_is_in_shopping_cart(self, obj):
         # request = self.context.get('request')
         # if request and request.user.is_authenticated:
         #     return obj in request.user.shopping_cart.all()  
         return False
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    """Сериализатор для работы с избранными рецептами."""
+    name = serializers.CharField(source='recipe.name', read_only=True)
+    image = serializers.CharField (source='recipe.image', read_only=True)
+    cooking_time =  serializers.IntegerField(source='recipe.cooking_time', read_only=True)
+    class Meta:
+        model = Favorite
+
+        fields = ['id', 'name', 'image', 'cooking_time']
+

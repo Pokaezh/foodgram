@@ -7,16 +7,6 @@ from django.core.validators import MinValueValidator
 
 from food.constants import MAX_LENGTH_FIELD_STR, MAX_LENGTH_TITLE
 
-
-# UNIT_CHOICES = [
-#     ("кг", "кг"),
-#     ("г", "г"),
-#     ("л", "л"),
-#     ("мл", "мл"),
-#     ("шт", "шт"),
-# ]
-
-
 class CookUser(AbstractUser):
     email = models.EmailField(unique=True)
     USERNAME_FIELD = 'email'
@@ -183,4 +173,27 @@ class RecipeIngredient(models.Model):
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
 
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='Пользователь',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='Рецепт',
+    )
 
+    class Meta:
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_user_recipe_favorite'
+            )
+        ]
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
