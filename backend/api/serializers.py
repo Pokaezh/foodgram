@@ -217,9 +217,16 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'image', 'cooking_time']
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    recipes = RecipeDetailSerializer(many=True, read_only=True)
-
+    recipes_count = serializers.IntegerField(source='recipes.count', read_only=True)
+    is_subscribed = serializers.SerializerMethodField()
+    
     class Meta:
         model = CookUser
-        fields = ['id', 'username', 'email', 'avatar', 'recipes']
+        fields = ['id', 'username', 'email', 'avatar', 'recipes', 'recipes_count', 'is_subscribed', 'first_name', 'last_name']
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request') 
+        if request is None:
+            return False
+        return Follow.objects.filter(user=request.user, following=obj).exists()
 

@@ -33,8 +33,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('api/auth/', include('djoser.urls.authtoken')),
     path("r/<str:hash>/", recipe_short_link, name="recipe_short_link"),
-
-
 ]
 
 

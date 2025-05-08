@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 
 
-from food.models import CookUser, Tag, Ingredient, Recipe, Favorite
+from food.models import CookUser, Tag, Ingredient, Recipe, Favorite, Follow
 from api.serializers import (
     UserSerializer, 
     UserCreateSerializer, 
@@ -22,7 +22,7 @@ from api.serializers import (
     RecipeCreateSerializer, 
     RecipeDetailSerializer,
     FavoriteSerializer,
-    Follow
+    SubscriptionSerializer
     )
 from api.permissions import DeleteAndUdateOnlyAuthor
 from api.filters import NameFilter, RecipeFilter
@@ -233,17 +233,18 @@ def recipe_short_link(request, hash):
 
 class SubscriptionViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    # pagination_class = RecipePagination
 
     @action(detail=True, methods=['post'], url_path='subscribe')
     def subscribe(self, request, pk=None):
         user_to_follow = get_object_or_404(CookUser, id=pk)
         follow, created = Follow.objects.get_or_create(user=request.user, following=user_to_follow)
-        
-        if created:
-            return Response({'detail': 'Successfully subscribed.'}, status=status.HTTP_201_CREATED)
-        return Response({'detail': 'Already subscribed.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        if created:
+            serializer = SubscriptionSerializer(user_to_follow, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({'detail': 'Already subscribed.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    
     @action(detail=True, methods=['delete'], url_path='subscribe')
     def unsubscribe(self, request, pk=None):
         user_to_unfollow = get_object_or_404(CookUser, id=pk)
@@ -255,6 +256,8 @@ class SubscriptionViewSet(viewsets.ViewSet):
             return Response({'detail': 'Not subscribed.'}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'], url_path='subscriptions')
+    
+    
     def list_subscriptions(self, request):
         # Получение списка пользователей, на которых подписан текущий пользователь
         subscriptions = Follow.objects.filter(user=request.user).select_related('following')
