@@ -1,4 +1,4 @@
-from rest_framework import filters, status, viewsets, permissions
+from rest_framework import filters, status, viewsets, permissions, pagination
 from rest_framework.response import Response 
 from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
 from djoser.views import UserViewSet as DjoserUserViewSet
@@ -97,12 +97,18 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     filter_backends = (NameFilter, DjangoFilterBackend)
     search_fields = ('^name',)
+
+class RecipePagination(pagination.PageNumberPagination):
+    page_size = 10  # Количество объектов на странице по умолчанию
+    page_size_query_param = 'limit'  # Параметр для задания количества объектов на странице
+    max_page_size = 100  # Максимальное количество объектов на странице
     
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeDetailSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+    pagination_class = RecipePagination
 # pagination_class = PageNumberPagination
 
     def get_serializer_class(self):
@@ -118,6 +124,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         elif self.request.method in ['PUT', 'PATCH', 'DELETE']:
             return [DeleteAndUdateOnlyAuthor()]
         return super().get_permissions() 
+    
 
     # def list(self, request, *args, **kwargs):
     #     queryset = self.filter_queryset(self.get_queryset())

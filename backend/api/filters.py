@@ -1,6 +1,7 @@
 from rest_framework import filters as drf_filters
 from django_filters import rest_framework as filters
-from food.models import Recipe
+from food.models import Ingredient, Recipe, Tag
+
 
 
 class NameFilter(drf_filters.SearchFilter):
@@ -8,8 +9,11 @@ class NameFilter(drf_filters.SearchFilter):
 
 
 class RecipeFilter(filters.FilterSet):
-    tags = filters.AllValuesMultipleFilter(
-        field_name='tags__slug', lookup_expr='icontains')
+    tags = filters.ModelMultipleChoiceFilter(
+        queryset=Tag.objects.all(),
+        field_name='tags__slug',
+        to_field_name='slug',
+    )
     is_favorited = filters.BooleanFilter(
         method='get_is_favorited')
 
