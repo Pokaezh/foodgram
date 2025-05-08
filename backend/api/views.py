@@ -21,11 +21,13 @@ from api.serializers import (
     IngredientSerializer, 
     RecipeCreateSerializer, 
     RecipeDetailSerializer,
-    FavoriteSerializer
+    FavoriteSerializer,
+    Follow
     )
 from api.permissions import DeleteAndUdateOnlyAuthor
 from api.filters import NameFilter, RecipeFilter
 from api.permissions import IsOwner, DeleteAndUdateOnlyAuthor
+from api.pagination import RecipePagination
 
 
 
@@ -98,10 +100,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (NameFilter, DjangoFilterBackend)
     search_fields = ('^name',)
 
-class RecipePagination(pagination.PageNumberPagination):
-    page_size = 10  # Количество объектов на странице по умолчанию
-    page_size_query_param = 'limit'  # Параметр для задания количества объектов на странице
-    max_page_size = 100  # Максимальное количество объектов на странице
+
     
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
@@ -231,6 +230,36 @@ def recipe_short_link(request, hash):
     """Возвращает рецепт по короткой ссылке."""
     recipe = get_object_or_404(Recipe, short_link=hash)
     return redirect(f"/recipes/{recipe.id}/")
+
+class SubscriptionViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    # pagination_class = RecipePagination
+
+    @action(detail=True, methods=['post'], url_path='subscribe')
+    def subscribe(self, request, pk=None):
+        user_to_follow = get_object_or_404(CookUser, id=pk)
+        follow, created = Follow.objects.get_or_create(user=request.user, following=user_to_follow)
+        
+        if created:
+            return Response({'detail': 'Successfully subscribed.'}, status=status.HTTP_201_CREATED)
+        return Response({'detail': 'Already subscribed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['delete'], url_path='subscribe')
+    def unsubscribe(self, request, pk=None):
+        user_to_unfollow = get_object_or_404(CookUser, id=pk)
+        try:
+            follow = Follow.objects.get(user=request.user, following=user_to_unfollow)
+            follow.delete()
+            return Response({'detail': 'Successfully unsubscribed.'}, status=status.HTTP_204_NO_CONTENT)
+        except Follow.DoesNotExist:
+            return Response({'detail': 'Not subscribed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='subscriptions')
+    def list_subscriptions(self, request):
+        # Получение списка пользователей, на которых подписан текущий пользователь
+        subscriptions = Follow.objects.filter(user=request.user).select_related('following')
+        serializer = SubscriptionSerializer(subscriptions, many=True)
+        return Response(serializer.data)
 
 # class FavoritViewSet(viewsets.ViewSet):
 #     permission_classes = [IsAuthenticated]

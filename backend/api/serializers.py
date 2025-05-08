@@ -216,3 +216,10 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
         fields = ['id', 'name', 'image', 'cooking_time']
 
+class SubscriptionSerializer(serializers.ModelSerializer):
+    recipes = RecipeDetailSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = CookUser
+        fields = ['id', 'username', 'email', 'avatar', 'recipes']
+
