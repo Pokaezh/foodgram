@@ -80,7 +80,32 @@ class UserViewSet(DjoserUserViewSet):
                 user.save() 
                 return Response(status=status.HTTP_204_NO_CONTENT)
 
-            return Response({"detail": "Аватар не найден."}, status=status.HTTP_404_NOT_FOUND) 
+            return Response({"detail": "Аватар не найден."}, status=status.HTTP_404_NOT_FOUND)
+        
+    @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
+    def subscribe(self, request, id=None):
+        """Подписка и отписка на пользователей"""
+        
+        author = get_object_or_404(CookUser, id=id)
+
+        if request.method == 'POST':
+            serializer = SubscriptionSerializer(
+                data={'user': request.user.id, 'following': author.id}, 
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if not Follow.objects.filter(user=request.user, following=author).exists():
+            return Response(
+                {'errors': 'Вы не подписаны на этого пользователя'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        Follow.objects.get(user=request.user, following=author).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -231,38 +256,38 @@ def recipe_short_link(request, hash):
     recipe = get_object_or_404(Recipe, short_link=hash)
     return redirect(f"/recipes/{recipe.id}/")
 
-class SubscriptionViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.IsAuthenticated]
+# class SubscriptionViewSet(viewsets.ViewSet):
+#     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=True, methods=['post'], url_path='subscribe')
-    def subscribe(self, request, pk=None):
-        user_to_follow = get_object_or_404(CookUser, id=pk)
-        follow, created = Follow.objects.get_or_create(user=request.user, following=user_to_follow)
+#     @action(detail=True, methods=['post'], url_path='subscribe')
+#     def subscribe(self, request, pk=None):
+#         user_to_follow = get_object_or_404(CookUser, id=pk)
+#         follow, created = Follow.objects.get_or_create(user=request.user, following=user_to_follow)
 
-        if created:
-            serializer = SubscriptionSerializer(user_to_follow, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response({'detail': 'Already subscribed.'}, status=status.HTTP_400_BAD_REQUEST)
+#         if created:
+#             serializer = SubscriptionSerializer(user_to_follow, context={'request': request})
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response({'detail': 'Already subscribed.'}, status=status.HTTP_400_BAD_REQUEST)
     
     
-    @action(detail=True, methods=['delete'], url_path='subscribe')
-    def unsubscribe(self, request, pk=None):
-        user_to_unfollow = get_object_or_404(CookUser, id=pk)
-        try:
-            follow = Follow.objects.get(user=request.user, following=user_to_unfollow)
-            follow.delete()
-            return Response({'detail': 'Successfully unsubscribed.'}, status=status.HTTP_204_NO_CONTENT)
-        except Follow.DoesNotExist:
-            return Response({'detail': 'Not subscribed.'}, status=status.HTTP_400_BAD_REQUEST)
+#     @action(detail=True, methods=['delete'], url_path='subscribe')
+#     def unsubscribe(self, request, pk=None):
+#         user_to_unfollow = get_object_or_404(CookUser, id=pk)
+#         try:
+#             follow = Follow.objects.get(user=request.user, following=user_to_unfollow)
+#             follow.delete()
+#             return Response({'detail': 'Successfully unsubscribed.'}, status=status.HTTP_204_NO_CONTENT)
+#         except Follow.DoesNotExist:
+#             return Response({'detail': 'Not subscribed.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['get'], url_path='subscriptions')
+#     @action(detail=False, methods=['get'], url_path='subscriptions')
     
     
-    def list_subscriptions(self, request):
-        # Получение списка пользователей, на которых подписан текущий пользователь
-        subscriptions = Follow.objects.filter(user=request.user).select_related('following')
-        serializer = SubscriptionSerializer(subscriptions, many=True)
-        return Response(serializer.data)
+#     def list_subscriptions(self, request):
+#         # Получение списка пользователей, на которых подписан текущий пользователь
+#         subscriptions = Follow.objects.filter(user=request.user).select_related('following')
+#         serializer = SubscriptionSerializer(subscriptions, many=True)
+#         return Response(serializer.data)
 
 # class FavoritViewSet(viewsets.ViewSet):
 #     permission_classes = [IsAuthenticated]

@@ -4,6 +4,7 @@ from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from food.models import CookUser, Follow, Tag, Ingredient, Recipe, RecipeIngredient, Favorite
 from api.validators import (
@@ -38,6 +39,7 @@ class UserCreateSerializer(BaseUserCreateSerializer):
 class UserSerializer(BaseUserSerializer):
     is_subscribed = serializers.SerializerMethodField()
     avatar = Base64ImageField (required=False, allow_null=True)
+    
 
     password = serializers.CharField(
         write_only=True,
@@ -216,17 +218,62 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
         fields = ['id', 'name', 'image', 'cooking_time']
 
-class SubscriptionSerializer(serializers.ModelSerializer):
-    recipes_count = serializers.IntegerField(source='recipes.count', read_only=True)
+class UserSubscribeSerializer(UserSerializer):
+    """"Сериализатор для предоставления информации
+    о подписках пользователя.
+    """
     is_subscribed = serializers.SerializerMethodField()
-    
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+    avatar = Base64ImageField (required=False, allow_null=True)
+
     class Meta:
         model = CookUser
-        fields = ['id', 'username', 'email', 'avatar', 'recipes', 'recipes_count', 'is_subscribed', 'first_name', 'last_name']
+        fields = ('email', 'id', 'username', 'first_name', 'avatar',
+                  'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+        read_only_fields = ('email','avatar', 'username', 'first_name', 'last_name',
+                            'is_subscribed', 'recipes', 'recipes_count')
 
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request') 
-        if request is None:
-            return False
-        return Follow.objects.filter(user=request.user, following=obj).exists()
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes_limit = None
+        if request:
+            recipes_limit = request.query_params.get('recipes_limit')
+        recipes = obj.recipes.all()
+        if recipes_limit:
+            recipes = obj.recipes.all()[:int(recipes_limit)]
+        return RecipeDetailSerializer(recipes, many=True,
+                                     context={'request': request}).data
 
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    """Сериализатор для подписки/отписки от пользователей."""
+    
+    class Meta:
+        model = Follow
+        fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'following'), 
+                message='Вы уже подписаны на этого пользователя'
+            )
+        ]
+
+    def validate(self, data):
+        request = self.context.get('request')
+        if request.user == data['following']: 
+            raise serializers.ValidationError(
+                'Нельзя подписываться на самого себя!'
+            )
+        return data
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        return UserSubscribeSerializer(
+            instance.following, context={'request': request}
+        ).data
+    
+   
