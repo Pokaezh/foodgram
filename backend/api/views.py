@@ -22,7 +22,8 @@ from api.serializers import (
     RecipeCreateSerializer, 
     RecipeDetailSerializer,
     FavoriteSerializer,
-    SubscriptionSerializer
+    SubscriptionSerializer,
+    UserSubscribeSerializer
     )
 from api.permissions import DeleteAndUdateOnlyAuthor
 from api.filters import NameFilter, RecipeFilter
@@ -85,7 +86,7 @@ class UserViewSet(DjoserUserViewSet):
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
     def subscribe(self, request, id=None):
         """Подписка и отписка на пользователей"""
-        
+
         author = get_object_or_404(CookUser, id=id)
 
         if request.method == 'POST':
@@ -105,6 +106,30 @@ class UserViewSet(DjoserUserViewSet):
 
         Follow.objects.get(user=request.user, following=author).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def subscriptions(self, request):
+        """Просмотр подписок"""
+        if not request.user.is_authenticated:
+            return Response({
+                'count': 0,
+                'next': None,
+                'previous': None,
+                'results': []
+            })
+
+        queryset = User.objects.filter(following__user=request.user)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = UserSubscribeSerializer(
+                page, many=True, context={'request': request}
+            )
+            return self.get_paginated_response(serializer.data)
+
+        serializer = UserSubscribeSerializer(
+            queryset, many=True, context={'request': request}
+        )
+        return Response(serializer.data)
 
 
 

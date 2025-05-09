@@ -207,6 +207,17 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         # if request and request.user.is_authenticated:
         #     return obj in request.user.shopping_cart.all()  
         return False
+    
+class RecipeMinSerializer(serializers.ModelSerializer):
+    is_in_shopping_cart = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time', 'is_in_shopping_cart')
+    
+    def get_is_in_shopping_cart(self, obj):
+        return False
+
 
 class FavoriteSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с избранными рецептами."""
@@ -242,7 +253,7 @@ class UserSubscribeSerializer(UserSerializer):
         recipes = obj.recipes.all()
         if recipes_limit:
             recipes = obj.recipes.all()[:int(recipes_limit)]
-        return RecipeDetailSerializer(recipes, many=True,
+        return RecipeMinSerializer(recipes, many=True,
                                      context={'request': request}).data
 
     def get_recipes_count(self, obj):
