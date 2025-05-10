@@ -57,7 +57,7 @@ class UserSerializer(BaseUserSerializer):
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj in request.user.followers.all()
+            return Follow.objects.filter(user=request.user, following=obj).exists()
         return False
     
     def get_image_url(self, obj):
@@ -209,14 +209,11 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         return False
     
 class RecipeMinSerializer(serializers.ModelSerializer):
-    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time', 'is_in_shopping_cart')
+        fields = ('id', 'name', 'image', 'cooking_time')
     
-    def get_is_in_shopping_cart(self, obj):
-        return False
 
 
 class FavoriteSerializer(serializers.ModelSerializer):

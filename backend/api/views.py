@@ -83,7 +83,11 @@ class UserViewSet(DjoserUserViewSet):
 
             return Response({"detail": "Аватар не найден."}, status=status.HTTP_404_NOT_FOUND)
         
-    @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
+    @action(
+            detail=True, 
+            methods=['post', 'delete'], 
+            url_path='subscribe',
+            permission_classes=[IsAuthenticated],)
     def subscribe(self, request, id=None):
         """Подписка и отписка на пользователей"""
 
@@ -106,6 +110,7 @@ class UserViewSet(DjoserUserViewSet):
 
         Follow.objects.get(user=request.user, following=author).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
     
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def subscriptions(self, request):
