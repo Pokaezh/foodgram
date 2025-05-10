@@ -110,15 +110,10 @@ class UserViewSet(DjoserUserViewSet):
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def subscriptions(self, request):
         """Просмотр подписок"""
-        if not request.user.is_authenticated:
-            return Response({
-                'count': 0,
-                'next': None,
-                'previous': None,
-                'results': []
-            })
+        if request.user.is_authenticated:
+            queryset = User.objects.filter(followers__user=request.user)
 
-        queryset = User.objects.filter(following__user=request.user)
+
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = UserSubscribeSerializer(
