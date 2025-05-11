@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
 class AllowAnyExceptMe(BasePermission):
     """
     Разрешает доступ всем пользователям, кроме доступа к /api/users/me/
@@ -17,6 +18,7 @@ class AllowAnyExceptMe(BasePermission):
             return False
         return True
 
+
 class DeleteAndUdateOnlyAuthor(permissions.BasePermission):
     """
     Разрешение для проверки, является ли пользователь автором объекта.
@@ -25,5 +27,3 @@ class DeleteAndUdateOnlyAuthor(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return (request.method in permissions.SAFE_METHODS
                 or obj.author == request.user)
-
-
