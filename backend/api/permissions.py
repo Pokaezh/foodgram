@@ -26,11 +26,4 @@ class DeleteAndUdateOnlyAuthor(permissions.BasePermission):
         return (request.method in permissions.SAFE_METHODS
                 or obj.author == request.user)
 
-class IsOwner(permissions.BasePermission):
-    """
-    Позволяет редактировать только владельцу профиля.
-    """
 
-    def has_object_permission(self, request, view, obj):
-        # Проверяем, что пользователь является владельцем объекта
-        return obj == request.user

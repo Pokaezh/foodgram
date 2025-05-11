@@ -23,8 +23,6 @@ router.register(r"users", UserViewSet, basename="users")
 router.register("tags", TagViewSet, basename="tags")
 router.register("ingredients", IngredientViewSet, basename="ingredients")
 router.register("recipes", RecipeViewSet, basename="recipes")
-    # router.register("users", SubscriptionViewSet, basename="subscriptions")
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),

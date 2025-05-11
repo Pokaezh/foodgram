@@ -6,7 +6,7 @@ from djoser.serializers import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from food.models import CookUser, Follow, Tag, Ingredient, Recipe, RecipeIngredient, Favorite
+from food.models import CookUser, Follow, Tag, Ingredient, Recipe, RecipeIngredient, Favorite, ShoppingCart
 from api.validators import (
     validate_ingredients, 
     validate_tags,
@@ -202,18 +202,20 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         representation['image'] = representation['image'] or ''
         return representation
 
+    
     def get_is_in_shopping_cart(self, obj):
-        # request = self.context.get('request')
-        # if request and request.user.is_authenticated:
-        #     return obj in request.user.shopping_cart.all()  
-        return False
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        return ShoppingCart.objects.filter(
+            user=request.user, recipe=obj
+        ).exists()
     
 class RecipeMinSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
-    
+        fields = ('id', 'name', 'image', 'cooking_time',)
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -285,3 +287,26 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         ).data
     
    
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    """Сериализатор для списка покупок."""
+
+    class Meta:
+        model = ShoppingCart
+        fields = ("user", "recipe")
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=ShoppingCart.objects.all(),
+                fields=("user", "recipe"),
+                message="Рецепт уже добавлен в список покупок",
+            )
+        ]
+
+    def to_representation(self, instance):
+        """Представление объекта."""
+        recipe = instance.recipe
+        return {
+            "id": recipe.id,
+            "name": recipe.name,
+            "image": recipe.image.url if recipe.image else None,
+            "cooking_time": recipe.cooking_time
+        }
