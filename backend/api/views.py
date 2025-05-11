@@ -2,7 +2,7 @@ from io import StringIO
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from djoser.views import UserViewSet as DjoserUserViewSet
@@ -21,6 +21,7 @@ from api.serializers import (
     RecipeCreateSerializer,
     RecipeDetailSerializer,
     ShoppingCartSerializer,
+    SubscriptionSerializer,
     TagSerializer,
     UserCreateSerializer,
     UserSerializer,
