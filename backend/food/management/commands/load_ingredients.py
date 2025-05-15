@@ -15,7 +15,7 @@ class Command(BaseCommand):
         added_count = 0  # Счётчик добавленных ингредиентов
         existing_count = 0  # Счётчик существующих ингредиентов
 
-        with open('../data/ingredients.json', encoding='utf-8') as f:
+        with open('./data/ingredients.json', encoding='utf-8') as f:
             data = json.load(f)
 
             for item in data:
