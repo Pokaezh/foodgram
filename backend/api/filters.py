@@ -1,7 +1,6 @@
 from django_filters import rest_framework as filters
-from rest_framework import filters as drf_filters
-
 from food.models import Recipe, Tag
+from rest_framework import filters as drf_filters
 
 
 class NameFilter(drf_filters.SearchFilter):

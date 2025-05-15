@@ -1,42 +1,27 @@
 from io import StringIO
 
+from api.filters import NameFilter, RecipeFilter
+from api.pagination import RecipePagination
+from api.permissions import DeleteAndUdateOnlyAuthor
+from api.serializers import (AvatarSerializer, FavoriteSerializer,
+                             IngredientSerializer, RecipeCreateSerializer,
+                             RecipeDetailSerializer, ShoppingCartSerializer,
+                             SubscriptionSerializer, TagSerializer,
+                             UserCreateSerializer, UserSerializer,
+                             UserSubscribeSerializer)
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
+from food.models import (CookUser, Favorite, Follow, Ingredient, Recipe,
+                         RecipeIngredient, ShoppingCart, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from api.filters import NameFilter, RecipeFilter
-from api.pagination import RecipePagination
-from api.permissions import DeleteAndUdateOnlyAuthor
-from api.serializers import (
-    AvatarSerializer,
-    FavoriteSerializer,
-    IngredientSerializer,
-    RecipeCreateSerializer,
-    RecipeDetailSerializer,
-    ShoppingCartSerializer,
-    SubscriptionSerializer,
-    TagSerializer,
-    UserCreateSerializer,
-    UserSerializer,
-    UserSubscribeSerializer,
-)
-from food.models import (
-    CookUser,
-    Favorite,
-    Follow,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    ShoppingCart,
-    Tag,
-)
 User = get_user_model()
 
 

@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-
-from food.models import CookUser, Ingredient, Tag, Recipe
+from food.models import CookUser, Ingredient, Recipe, Tag
 
 User = get_user_model()
 

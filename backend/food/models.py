@@ -1,10 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.db import models
 from django.core.validators import MinValueValidator
-
-
+from django.db import models
 from food.constants import MAX_LENGTH_FIELD_STR, MAX_LENGTH_TITLE
 
 

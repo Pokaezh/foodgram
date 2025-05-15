@@ -1,23 +1,14 @@
 
 import base64
-from django.core.files.base import ContentFile
-
-from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
-from djoser.serializers import UserSerializer as BaseUserSerializer
-from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
 from api.validators import validate_recipe
-from food.models import (
-    CookUser,
-    Favorite,
-    Follow,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    Tag,
-    ShoppingCart
-)
+from django.core.files.base import ContentFile
+from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
+from djoser.serializers import UserSerializer as BaseUserSerializer
+from food.models import (CookUser, Favorite, Follow, Ingredient, Recipe,
+                         RecipeIngredient, ShoppingCart, Tag)
+from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 
 class Base64ImageField(serializers.ImageField):
