@@ -52,7 +52,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000",]
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000", ]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://eda-dada.ru',
