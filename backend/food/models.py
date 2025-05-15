@@ -7,6 +7,7 @@ from django.core.validators import MinValueValidator
 
 from food.constants import MAX_LENGTH_FIELD_STR, MAX_LENGTH_TITLE
 
+
 class CookUser(AbstractUser):
     email = models.EmailField(unique=True)
     USERNAME_FIELD = 'email'
@@ -16,7 +17,7 @@ class CookUser(AbstractUser):
         'last_name',
         'username'
     ]
-    
+
     avatar = models.ImageField(
         'Аватар',
         upload_to='avatars/',
@@ -34,6 +35,7 @@ class CookUser(AbstractUser):
 
 
 User = get_user_model()
+
 
 class Follow(models.Model):
     '''Модель для подписок.'''
@@ -66,7 +68,7 @@ class Ingredient(models.Model):
     measurement_unit = models.CharField(
         'Единица измерения',
         max_length=MAX_LENGTH_TITLE,)
-    
+
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
@@ -120,7 +122,7 @@ class Recipe(models.Model):
         related_name='recipes')
 
     tags = models.ManyToManyField(Tag, related_name='recipes')
-    
+
     cooking_time = models.IntegerField()
 
     short_link = models.CharField(
@@ -148,6 +150,7 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name[:MAX_LENGTH_FIELD_STR]
 
+
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
@@ -164,7 +167,8 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveIntegerField(
         'Количество',
         validators=[
-            MinValueValidator(1, 'Количество ингредиентов не может быть меньше 1')
+            MinValueValidator(
+                1, 'Количество ингредиентов не может быть меньше 1')
         ]
     )
 
@@ -172,6 +176,7 @@ class RecipeIngredient(models.Model):
         unique_together = ('recipe', 'ingredient')
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
+
 
 class Favorite(models.Model):
     user = models.ForeignKey(
