@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from food.constants import MIN_AMOUNT, MAX_AMOUNT
+
 
 def validate_tags(tags):
     if not tags:
@@ -18,25 +20,21 @@ def validate_ingredients(ingredients):
 
     ingredient_ids = set()
     for ingredient in ingredients:
-        ingredient_id = ingredient.get("ingredient").id
+        ingredient_id = ingredient["ingredient"].id
+
         if ingredient_id in ingredient_ids:
             raise serializers.ValidationError(
                 "Ингредиенты не должны дублироваться.")
         ingredient_ids.add(ingredient_id)
 
-        amount = ingredient.get('amount')
+        amount = ingredient['amount']
 
-        # Преобразуем amount в целое число, если это строка
         if isinstance(amount, str):
-            try:
-                amount = int(amount)
-            except ValueError:
-                raise serializers.ValidationError(
-                    "Количество должно быть целым числом.")
+            amount = int(amount)
 
-        if amount is None or amount < 1:
+        if amount < 1:
             raise serializers.ValidationError(
-                "Должен быть хотя бы один ингредиент с кол-вом больше 0.")
+                "Количество должно быть целым числом и больше нуля.")
 
 
 def validate_image(image):
@@ -45,8 +43,9 @@ def validate_image(image):
 
 
 def validate_cooking_time(cooking_time):
-    if cooking_time is None or cooking_time < 1:
-        raise serializers.ValidationError("Укажите время готовки.")
+    if cooking_time < MIN_AMOUNT or cooking_time > MAX_AMOUNT:
+        raise serializers.ValidationError(
+            "Укажите время готовки от 1 до 32000 минут.")
 
 
 def validate_recipe(attrs):
@@ -55,3 +54,12 @@ def validate_recipe(attrs):
     validate_image(attrs.get("image"))
     validate_cooking_time(attrs.get("cooking_time"))
     return attrs
+
+
+def validate_amount(self, value):
+    """Проверка валидности значения amount."""
+    if value < MIN_AMOUNT or value > MAX_AMOUNT:
+        raise serializers.ValidationError(
+            f"Колл-во должно быть от {MIN_AMOUNT} до {MAX_AMOUNT}."
+        )
+    return value

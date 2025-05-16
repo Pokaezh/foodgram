@@ -11,10 +11,10 @@ class AllowAnyExceptMe(BasePermission):
     """
     def has_permission(self, request, view):
         # Разрешить доступ ко всем эндпоинтам
-        if request.method in ['GET'] and view.action in ['list', 'retrieve']:
+        if request.method in ["GET"] and view.action in ["list", "retrieve"]:
             return True
         # Запретить доступ к /api/users/me/
-        if view.action == 'me':
+        if view.action == "me":
             return False
         return True
 

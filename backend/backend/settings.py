@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', get_random_secret_key())
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", get_random_secret_key())
 
 
 # SECURITY WARNING: don"t run with debug turned on in production!
@@ -55,7 +55,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = ["http://localhost:3000", ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://eda-dada.ru',
+    "https://eda-dada.ru",
 ]
 
 CORS_URLS_REGEX = r"^/api/.*$"
@@ -84,34 +84,34 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-USE_SQLITE = os.getenv('USE_SQLITE', 'False').lower() == 'true'
+USE_SQLITE = os.getenv("USE_SQLITE", "False").lower() == "true"
 
 
 if USE_SQLITE:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 else:
     DATABASES = {
-        'default': {
-            'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-            'NAME': os.getenv('DB_NAME', 'django'),
-            'USER': os.getenv('POSTGRES_USER', 'django'),
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'password'),
-            'HOST': os.getenv('DB_HOST', 'db'),
-            'PORT': os.getenv('DB_PORT', 5432)
+        "default": {
+            "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.postgresql"),
+            "NAME": os.getenv("DB_NAME", "django"),
+            "USER": os.getenv("POSTGRES_USER", "django"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "password"),
+            "HOST": os.getenv("DB_HOST", "db"),
+            "PORT": os.getenv("DB_PORT", 5432)
         }
     }
 
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'collected_static'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "collected_static"
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = '/app/media'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = "/app/media"
 
 AUTH_USER_MODEL = "food.CookUser"
 
@@ -139,7 +139,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "ru-RU"
 
-TIME_ZONE = 'Europe/Moscow'
+TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 
@@ -164,8 +164,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication"],
 
-    'DEFAULT_PAGINATION_CLASS': 'api.pagination.PageLimitPagination',
-    'PAGE_SIZE': 6,
+    "DEFAULT_PAGINATION_CLASS": "api.pagination.PageLimitPagination",
+    "PAGE_SIZE": 6,
 
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 

@@ -42,8 +42,8 @@ class RecipeAdmin(admin.ModelAdmin):
     def get_ingredients(self, obj):
         return ", ".join(
             [ingredient.name for ingredient in obj.ingredients.all()])
-    get_ingredients.short_description = 'Ingredients'
+    get_ingredients.short_description = "Ingredients"
 
     def get_tags(self, obj):
         return ", ".join([tag.name for tag in obj.tags.all()])
-    get_tags.short_description = 'Tags'
+    get_tags.short_description = "Tags"
