@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from food.constants import MIN_AMOUNT, MAX_AMOUNT
+from food.constants import MAX_AMOUNT, MIN_AMOUNT
 
 
 def validate_tags(tags):

@@ -22,6 +22,7 @@ from api.serializers import (AvatarSerializer, FavoriteSerializer,
                              UserSubscribeSerializer)
 from food.models import (CookUser, Favorite, Follow, Ingredient, Recipe,
                          RecipeIngredient, ShoppingCart, Tag)
+
 User = get_user_model()
 
 

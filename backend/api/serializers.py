@@ -6,7 +6,7 @@ from djoser.serializers import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from api.validators import validate_recipe, validate_amount
+from api.validators import validate_amount, validate_recipe
 from food.models import (CookUser, Favorite, Follow, Ingredient, Recipe,
                          RecipeIngredient, ShoppingCart, Tag)
 
